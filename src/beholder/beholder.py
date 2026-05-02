@@ -1,24 +1,36 @@
-from multiprocessing import Process, Queue
-from concurrent.futures import ProcessPoolExecutor
+from queue import Queue
+from multiprocessing import Process, Event
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
-from typing import NamedTuple
-
-from time import sleep
-import random
-
-class DataPoint(NamedTuple):
-    key: str
-    value: float
 
 class Beholder:
-    def __init__(self, queue, proc):
+    def __init__(self, queue, shutdown_timeout=1.0):
         self._queue = queue
-        self._proc = proc
+        self._exit_event = Event()
+        self._proc = Process(target=self._run_task, args=(self._queue, self._exit_event), daemon=True)
+        self._shutdown_timeout = shutdown_timeout
+
+    def start(self):
+        self._proc.start()
+
+    def join(self):
+        self._proc.join()
+
+    def shutdown(self):
+        self._exit_event.set()
+        self._proc.join(self._shutdown_timeout)
+
+        if self._proc.exitcode is None:
+            self._proc.terminate()
+            self._proc.join(self._shutdown_timeout)
+        
+        if self._proc.exitcode is None:
+            self._proc.kill()
 
     @staticmethod
-    def _run_task(queue: Queue):
+    def _run_task(queue: Queue, exit_event: Event):
         app = QtWidgets.QApplication([])
+
         win = pg.plot(title='Beholder')
         win.addLegend()
 
@@ -26,8 +38,8 @@ class Beholder:
         curves = {}
         refresh = {}
 
-        while True:
-            while not queue.empty():
+        while not exit_event.is_set():
+            while not exit_event.is_set() and not queue.empty():
                 key, value = queue.get()
 
                 if key not in data:
@@ -45,46 +57,4 @@ class Beholder:
 
             app.processEvents()
 
-    @classmethod
-    def spawn(cls):
-        queue = Queue()
-        proc = Process(target=cls._run_task, args=(queue,), daemon=True)
-        proc.start()
-
-        return Beholder(queue, proc)
-
-    @property
-    def queue(self):
-        return self._queue
-
-    @property
-    def proc(self):
-        return self._proc
-
-    def send(self, key, value):
-        self.queue.put((key, value))
-
-class GlobalQueue:
-    @classmethod
-    def attach_queue(cls, queue):
-        cls._queue = queue
-
-    @classmethod
-    def send(cls, key, value):
-        cls._queue.put((key, value))
-
-def worker(key):
-    while True:
-        GlobalQueue.send(key, random.randint(20,30))
-        sleep(.01)
-
-if __name__ == '__main__':
-    bh = Beholder.spawn()
-
-    with ProcessPoolExecutor(initializer=GlobalQueue.attach_queue, initargs=(bh.queue,)) as executor:
-        futures = [executor.submit(worker, key) for key in ['aa', 'bb']]
-
-        while True:
-            bh.send('a', random.randint(-10,10))
-            bh.send('b', random.randint(-10,10))
-            sleep(.01)
+        app.quit()
