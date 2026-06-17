@@ -1,7 +1,7 @@
 import argparse
 
-from queue_manager import QueueManager
-from beholder import Beholder
+from beholder.queue_manager import QueueManager
+from beholder.beholder import Beholder
 
 # python server.py -a 127.0.0.1 -p 5555 -k 123
 
