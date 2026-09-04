@@ -1,4 +1,7 @@
-# Beholder
+# Beholder 👁️
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
 
 Live plotting for multiprocessing data streams.
 
@@ -9,10 +12,14 @@ Beholder is a small Python toolkit for sending numeric values through a shared q
 This project requires Python 3.12 or newer.
 
 ```bash
+# Using uv (recommended)
 uv sync
+
+# Using pip
+pip install git+https://github.com/mateusglucas/beholder.git
 ```
 
-## Usage
+## Quick Start
 
 Start the server:
 
@@ -32,8 +39,8 @@ The server opens a plotting window and updates it as values arrive.
 
 Beholder has two main pieces:
 
-- `QueueManager`: exposes a shared queue that clients can connect to.
-- `Beholder`: consumes `(key, value)` pairs from the queue and plots each key as a separate curve.
+- `QueueManager`: exposes a shared queue via `multiprocessing.managers` that clients can connect to over TCP.
+- `Beholder`: consumes `(key, value)` pairs from the queue in a separate process and plots each key as a separate curve using PyQtGraph.
 
 Example payload:
 
@@ -41,15 +48,17 @@ Example payload:
 QueueManager.get_global_queue().put(("temperature", 23.5))
 ```
 
-Each unique key becomes its own plotted series.
+Each unique key automatically becomes its own plotted series with a distinct color.
 
 ## Examples
 
-The `examples/` directory contains a minimal client/server setup:
+See the [`examples/`](examples/) directory for a complete client/server setup:
 
-- `examples/server.py`: starts the queue manager and plotting window.
-- `examples/client.py`: connects to the queue manager and sends random values.
+| File | Description |
+|------|-------------|
+| [`examples/server.py`](examples/server.py) | Starts the queue manager and launches Beholder in a separate process to plot incoming data |
+| [`examples/client.py`](examples/client.py) | Connects to the server and sends random values every 100ms |
 
 ## License
 
-No license has been specified yet.
+[MIT](LICENSE)

@@ -3,6 +3,7 @@ name = "beholder"
 version = "0.1.0"
 description = "Live plotting for multiprocessing data streams"
 readme = "README.md"
+license = { file = "LICENSE" }
 authors = [
     { name = "mateusglucas" },
 ]
