@@ -58,7 +58,3 @@ See the [`examples/`](examples/) directory for a complete client/server setup:
 |------|-------------|
 | [`examples/server.py`](examples/server.py) | Starts the queue manager and launches Beholder in a separate process to plot incoming data |
 | [`examples/client.py`](examples/client.py) | Connects to the server and sends random values every 100ms |
-
-## License
-
-[MIT](LICENSE)
