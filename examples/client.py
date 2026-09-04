@@ -2,7 +2,7 @@ from time import sleep
 import random
 import argparse
 
-from beholder.queue_manager import QueueManager
+from beholder import QueueManager
 
 # python client.py -a 127.0.0.1 -p 5555 -k 123
 
